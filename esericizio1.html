@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestione Contatti</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+</head>
+<style>
+    nav li {
+        display: inline-block;
+        margin-right: 10px; /* Aggiunto margine per i pulsanti nella nav */
+    }
+
+    #formDiv {
+        margin: 10px;
+        padding: 15px;
+        background-color: whitesmoke;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        display: none; /* Nascosto di default */
+
+    }
+
+    #elenco {
+        margin: 10px;
+        padding: 15px;
+        background-color: #f9f9f9;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+    }
+
+    #elenco table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 15px;
+    }
+
+    #elenco th, #elenco td {
+        border: 1px solid #ccc;
+        padding: 8px; /* Added padding for better readability */
+
+    }
+
+    #elenco th {
+        background-color: #e9ecef;
+    }
+
+    #aggiungiForm label {
+        display: block;
+        margin-top: 10px;
+        font-weight: bold;
+    }
+    /* Adjusted width for input fields to accommodate remove buttons */
+    #aggiungiForm input.form-control {
+        width: calc(100% - 90px);
+        display: inline-block;
+        margin-right: 5px;
+    }
+    #aggiungiForm button.btn-danger.btn-sm {
+        vertical-align: bottom; /* Align remove button with input */
+    }
+
+
+    #ricerca label {
+        display: block;
+        margin-top: 10px;
+        font-weight: bold;
+    }
+    #ricerca input {
+        display: inline-block;
+        margin-right: 5px;
+    }
+    #ricerca{
+        border: 1px solid #ccc;
+        background-color: whitesmoke;
+        padding: 10px;
+        border-radius: 10px;
+    }
+
+</style>
+<body>
+<header>
+    <nav class="navbar navbar-light bg-light p-3">
+        <ul class="navbar-nav d-flex flex-row">
+            <li class="nav-item">
+                <button class="btn btn-primary me-2" id="button_Form" onclick="nascondi()">Nuovo Contatto</button>
+            </li>
+            <li class="nav-item">
+                <button class="btn btn-danger" id="mostraElencoBtn" onclick="mostraElenco()">Mostra Elenco</button>
+            </li>
+            <li class="nav-item">
+                <button class="btn btn-warning" id="ricercaBtn" onclick="ricerca()">Ricerca contatto</button>
+            </li>
+        </ul>
+    </nav>
+</header>
+
+<main class="container mt-4">
+    <div id="formDiv">
+        <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#addfieldModal" id="addfieldbutton">Aggiungi Campo</button>
+        <hr>
+    </div>
+
+    <div id="elenco" style="display: block;"> <h2>Elenco Contatti</h2>
+        <table class="table table-striped table-bordered">
+            <thead id="elencoTableHeader">
+                </thead>
+            <tbody id="elencoTableBody">
+                </tbody>
+        </table>
+        <button class="btn btn-danger mt-3" id="deleteAllBtn" onclick="deleteAll()">Elimina tutti</button>
+    </div>
+
+    <div id="ricerca"> </div>
+
+    <div id="risultatoRicerca"></div>
+
+    <div class="modal fade" tabindex="-1" id="addfieldModal" aria-labelledby="addfieldModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addfieldModalLabel">Aggiungi Nuovo Campo</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="tipo_campo" class="form-label">Tipo di Campo</label>
+                        <select class="form-select" id="tipo_campo" name="tipo_campo" required>
+                            <option value="" selected>Scegli</option>
+                            <option value="text">Testo</option>
+                            <option value="number">Numero</option>
+                            <option value="email">E-Mail</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="nome_campo" class="form-label">Nome del Campo (tutto attaccato e minuscolo)</label>
+                        <input type="text" class="form-control" id="nome_campo" name="nome_campo" placeholder="es. nomeutente" required/>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="testo_label" class="form-label">Testo dell'etichetta (visualizzato sul form)</label>
+                        <input type="text" class="form-control" id="testo_label" name="testo_label" placeholder="es. Nome Utente"/>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Chiudi</button>
+                    <button type="button" class="btn btn-primary" id="savenewfield">Salva Campo</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+
+<script>
+    let campi = [
+        { label: "Nome", nome_campo: "nome", tipo: "text" },
+        { label: "Cognome", nome_campo: "cognome", tipo: "text" },
+        { label: "Cell.", nome_campo: "cellulare", tipo: "text" },
+        { label: "Email", nome_campo: "email", tipo: "email" },
+        { label: "Anni", nome_campo: "anni", tipo: "number" }
+    ];
+
+    let persone = localStorage.getItem("persone");
+    if (persone) {
+        try {
+            persone = JSON.parse(persone);
+        } catch (e) {
+            console.error("Errore nel parsing dei dati delle persone:", e);
+            persone = [];
+        }
+    } else {
+        persone = [];
+    }
+
+    // Funzione per renderizzare il form dinamico
+    function renderForm() {
+        let formDiv = document.getElementById("formDiv");
+        // Pulisce solo il form precedente, non i pulsanti "Aggiungi Campo"
+        let existingForm = formDiv.querySelector("form");
+        if (existingForm) {
+            existingForm.remove();
+        }
+
+        const form = document.createElement("form");
+        form.id = "aggiungiForm"; // ID per selezionare il form
+        formDiv.appendChild(form);
+
+        // Aggiungi un campo nascosto per tenere traccia dell'indice
+        const hiddenIndex = document.createElement("input");
+        hiddenIndex.type = "hidden";
+        hiddenIndex.id = "index";
+        hiddenIndex.value = ""; // Initialize with empty value
+        form.appendChild(hiddenIndex);
+
+        campi.forEach((campo, index) => {
+            const fieldContainer = document.createElement("div");
+            fieldContainer.classList.add("mb-3"); // Add margin bottom for spacing
+
+            const label = document.createElement("label");
+            label.textContent = campo.label || campo.nome_campo.charAt(0).toUpperCase() + campo.nome_campo.slice(1);
+            label.htmlFor = campo.nome_campo; // Collega label all'input
+            fieldContainer.appendChild(label);
+
+            const input = document.createElement("input");
+            input.type = campo.tipo;
+            input.name = campo.nome_campo;
+            input.id = campo.nome_campo;
+            input.required = true;
+            input.classList.add("form-control"); // Aggiungi classi Bootstrap
+            fieldContainer.appendChild(input);
+
+            const removeButton = document.createElement("button");
+            removeButton.textContent = "Rimuovi";
+            removeButton.type = "button";
+            removeButton.classList.add("btn", "btn-danger", "btn-sm", "ms-2"); // Classi Bootstrap, added ms-2 for left margin
+            // Using a data attribute to store the field's original index for removal
+            removeButton.setAttribute('data-field-index', index);
+            removeButton.onclick = (event) => {
+                const fieldToRemoveIndex = parseInt(event.target.getAttribute('data-field-index'));
+                if (confirm(`Sei sicuro di voler rimuovere il campo '${campi[fieldToRemoveIndex].label}'?`)) {
+                    // Remove by its original index, then re-render
+                    campi.splice(fieldToRemoveIndex, 1);
+                    renderForm(); // Rerenderizza il form dopo la rimozione
+                }
+            }
+            fieldContainer.appendChild(removeButton);
+            form.appendChild(fieldContainer);
+        });
+
+        const submitButton = document.createElement("button");
+        submitButton.textContent = "Salva";
+        submitButton.type = "button";
+        submitButton.classList.add("btn", "btn-success", "mt-3", "me-2"); // Classi Bootstrap
+        form.appendChild(submitButton);
+
+        const annullaButton = document.createElement("button");
+        annullaButton.textContent = "Annulla";
+        annullaButton.type = "button";
+        annullaButton.classList.add("btn", "btn-secondary", "mt-3"); // Changed to secondary for 'cancel'
+        form.appendChild(annullaButton);
+
+        submitButton.onclick = (e) => {
+            e.preventDefault(); // Previene il comportamento di submit predefinito del form
+            save(); // Chiama la funzione save() al click
+            // nascondi(); // Non nascondere qui, lascia che save() lo faccia dopo un alert
+            // mostraElenco(); // Non mostrare qui, lascia che save() lo faccia dopo un alert
+        }
+
+        annullaButton.onclick = (e) => {
+            e.preventDefault(); // Previene il comportamento di submit predefinito del form
+            mostraElenco();
+        }
+    }
+    // Chiama renderForm per creare il form all'avvio
+    renderForm();
+
+
+    // Funzione per salvare i dati del form
+    let save = () => {
+        let persona = {};
+        const formElement = document.getElementById("aggiungiForm");
+
+        // Per una validazione basilare del form HTML5 prima di salvare
+        if (!formElement.checkValidity()) {
+            formElement.reportValidity(); // Mostra i messaggi di errore del browser
+            alert("Compila tutti i campi obbligatori!");
+            return;
+        }
+
+        campi.forEach(campo => {
+            const input = formElement.querySelector(`#${campo.nome_campo}`);
+            if (input) {
+                persona[campo.nome_campo] = campo.tipo === 'number' ? parseInt(input.value, 10) : input.value;
+            }
+        });
+
+        const indiceModificaInput = document.getElementById("index");
+        const indiceModifica = indiceModificaInput.value;
+
+        if (indiceModifica !== "") { // Se un indice è presente, significa che stiamo modificando
+            persone.splice(parseInt(indiceModifica), 1, persona);
+            alert("Contatto modificato con successo!");
+        } else { // Altrimenti, è un nuovo contatto
+            persone.push(persona);
+            alert("Contatto aggiunto con successo!");
+        }
+        localStorage.setItem("persone", JSON.stringify(persone));
+
+        console.log("Dati salvati:", persona);
+
+        // Resetta il form e l'indice dopo il salvataggio
+        formElement.reset();
+        indiceModificaInput.value = ""; // Resetta l'indice di modifica
+
+        nascondi(); // Nasconde il form dopo il salvataggio
+        mostraElenco(); // Aggiorna e mostra l'elenco
+    }
+
+    // Funzione per aggiungere un nuovo campo tramite il modal
+    function addField() {
+        const tipo_campo = document.getElementById("tipo_campo").value;
+        const nome_campo = document.getElementById("nome_campo").value;
+        const testo_label = document.getElementById("testo_label").value;
+
+        if (!tipo_campo || tipo_campo === "Scegli" || !nome_campo) {
+            alert("Tipo e nome del campo sono obbligatori.");
+            return;
+        }
+
+        // Check for duplicate field name
+        if (campi.some(campo => campo.nome_campo === nome_campo)) {
+            alert(`Esiste già un campo con il nome '${nome_campo}'. Scegli un nome diverso.`);
+            return;
+        }
+
+        const campo = {
+            tipo: tipo_campo,
+            nome_campo: nome_campo,
+            label: testo_label || nome_campo.charAt(0).toUpperCase() + nome_campo.slice(1)
+        }
+        campi.push(campo);
+        renderForm(); // Rerenderizza il form per includere il nuovo campo
+
+        // Reset modal fields and close modal
+        document.getElementById("tipo_campo").value = "";
+        document.getElementById("nome_campo").value = "";
+        document.getElementById("testo_label").value = "";
+        const addFieldModal = bootstrap.Modal.getInstance(document.getElementById('addfieldModal'));
+        if (addFieldModal) {
+            addFieldModal.hide();
+        }
+    }
+
+    // Collega il pulsante "Salva Campo" del modal alla funzione addField
+    document.getElementById("savenewfield").addEventListener("click", addField);
+
+
+    // Funzione per nascondere/mostrare il form e l'elenco
+    function nascondi() {
+        let formDiv = document.getElementById("formDiv");
+        let elencoDiv = document.getElementById("elenco");
+        let ricercaDiv = document.getElementById("ricerca");
+        let risultatoRicercaDiv= document.getElementById("risultatoRicerca");
+
+        // Inverti la visibilità
+        if (formDiv.style.display === "none") {
+            formDiv.style.display = "block"; // Mostra il form
+            elencoDiv.style.display = "none"; // Nascondi l'elenco
+            ricercaDiv.style.display = "none"; // Nascondi la ricerca
+            risultatoRicercaDiv.style.display = "none";
+
+            // When showing the form for a new contact, clear the index and reset the form
+            document.getElementById("index").value = "";
+            document.getElementById("aggiungiForm").reset();
+        } else {
+            formDiv.style.display = "none"; // Nascondi il form
+            elencoDiv.style.display = "block"; // Mostra l'elenco
+        }
+    }
+
+    function ricerca() {
+    const formDiv = document.getElementById("formDiv");
+    const elencoDiv = document.getElementById("elenco");
+    const ricercaDiv = document.getElementById("ricerca");
+
+    formDiv.style.display = "none";
+    elencoDiv.style.display = "none";
+    ricercaDiv.style.display = "block";
+    ricercaDiv.innerHTML = "";
+
+    const titolo = document.createElement("h2");
+    titolo.textContent = "Ricerca contatto";
+    ricercaDiv.appendChild(titolo);
+    ricercaDiv.appendChild(document.createElement("hr"));
+
+    const form = document.createElement("form");
+
+    // Nome
+    const labelN = document.createElement("label");
+    labelN.textContent = "Nome";
+    form.appendChild(labelN);
+    const inputNome = document.createElement("input");
+    inputNome.id = "inputNome";
+    inputNome.classList.add("form-control", "mb-2");
+    form.appendChild(inputNome);
+
+    // Cognome
+    const labelC = document.createElement("label");
+    labelC.textContent = "Cognome";
+    form.appendChild(labelC);
+    const inputCognome = document.createElement("input");
+    inputCognome.id = "inputCognome";
+    inputCognome.classList.add("form-control", "mb-2");
+    form.appendChild(inputCognome);
+
+    // Pulsante Cerca
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.textContent = "Cerca";
+    btn.classList.add("btn", "btn-primary", "mt-2");
+    btn.onclick = () => {
+        const risultati = [];
+        const nome = inputNome.value;
+        const cognome = inputCognome.value;
+        persone.forEach(persona => {
+        if(nome.trim() != "" && cognome.trim()  == ""){
+           if(persona.nome.toUpperCase().includes(nome.toUpperCase())){
+            risultati.push(persona);
+           }
+        }
+        else if(cognome.trim()  != "" && nome.trim()  == ""){
+           if(persona.cognome.toUpperCase().includes(cognome.toUpperCase())){
+            risultati.push(persona);
+           }
+        }
+        else if(cognome.trim()  != "" && nome.trim()  != ""){
+            if(persona.cognome.toUpperCase().includes(cognome.toUpperCase()) && persona.nome.toUpperCase().includes(nome.toUpperCase())){
+                risultati.push(persona);
+            }
+        } else{
+            risultati.push(persona);
+        }
+       })
+
+        mostraRisultatiRicerca(risultati);
+    };
+
+    form.appendChild(btn);
+    ricercaDiv.appendChild(form);
+}
+
+    // Funzione per mostrare l'elenco dei contatti nella tabella
+    function mostraElenco() {
+        let formDiv = document.getElementById("formDiv");
+        let elencoDiv = document.getElementById("elenco");
+        let ricercaDiv = document.getElementById("ricerca");
+        let risultatoRicercaDiv = document.getElementById("risultatoRicerca");
+
+        // Nascondi il form e mostra l'elenco
+        formDiv.style.display = "none";
+        elencoDiv.style.display = "block";
+        ricercaDiv.style.display = "none";
+        risultatoRicercaDiv.style.display = "none";
+
+        const tableHeader = document.getElementById("elencoTableHeader");
+        const tableBody = document.getElementById("elencoTableBody");
+
+        // Pulisci il corpo della tabella prima di renderizzare
+        tableHeader.innerHTML = '';
+        tableBody.innerHTML = '';
+
+        if (persone.length === 0) {
+            // Se non ci sono persone, mostra un messaggio
+            tableBody.innerHTML = `<tr><td colspan="${campi.length + 1}">Nessun contatto salvato.</td></tr>`; // +1 for actions column
+            return;
+        }
+
+        // 1. Renderizza l'intestazione della tabella (<th>) dinamicamente
+        const headerRow = document.createElement("tr");
+        campi.forEach(campo => {
+            const th = document.createElement("th");
+            th.textContent = campo.label;
+            headerRow.appendChild(th);
+        });
+        // Aggiungi una colonna per le azioni (modifica/elimina)
+        const thActions = document.createElement("th");
+        thActions.textContent = "Azioni";
+        headerRow.appendChild(thActions);
+
+        tableHeader.appendChild(headerRow);
+
+
+        // 2. Renderizza il corpo della tabella (<tbody>) con i dati delle persone
+        persone.forEach((persona, index) => {
+            const row = document.createElement("tr");
+
+            campi.forEach(campo => {
+                const td = document.createElement("td");
+                // Prendi il valore della proprietà corrispondente dal singolo oggetto persona
+                td.textContent = persona[campo.nome_campo] || ''; // Gestisce campi mancanti
+                row.appendChild(td);
+            });
+
+            const tdActions = document.createElement("td");
+            
+            const editButton = document.createElement("button");
+            editButton.textContent = "Modifica";
+            editButton.classList.add("btn", "btn-success", "btn-sm");
+            editButton.style.marginRight = "5px";
+            editButton.onclick = () => editPersona(index);
+            tdActions.appendChild(editButton);
+
+            const deleteButton = document.createElement("button");
+            deleteButton.textContent = "Elimina";
+            deleteButton.classList.add("btn", "btn-danger", "btn-sm");
+            deleteButton.onclick = () => deletePersona(index);
+            tdActions.appendChild(deleteButton);
+
+            row.appendChild(tdActions);
+            tableBody.appendChild(row);
+        });
+    }
+
+    // Funzione per la modifica di una persona
+    function editPersona(index) {
+       nascondi(); // Pass to the form view
+       const indiceModificaInput = document.getElementById("index");
+       indiceModificaInput.value = index; // Set the hidden index field
+       const persona = persone[index];
+
+       campi.forEach(campo => {  // Fill the form with the person's data
+            const input = document.getElementById(campo.nome_campo); // Find the corresponding input
+            if (input) { // If the input exists
+                input.value = persona[campo.nome_campo] || ''; // Handle missing fields gracefully
+            }
+        });
+    }
+    
+
+    // Funzione per l'eliminazione di una persona
+    function deletePersona(index) {
+        if (confirm(`Sei sicuro di voler eliminare il contatto ${persone[index].nome || ''} ${persone[index].cognome || ''}?`)) {
+            persone.splice(index, 1); // Rimuovi l'elemento dall'array
+            localStorage.setItem("persone", JSON.stringify(persone)); // Aggiorna localStorage
+            mostraElenco(); // Rerenderizza la tabella
+            alert("Contatto eliminato!");
+        }
+    }
+
+
+    function deleteAll(){
+        if(confirm("Sei sicuro di voler eliminare tutti i contatti? Questa azione è irreversibile!")){
+            persone = []; // Rimuovi tutti gli elementi dall'array
+            localStorage.setItem("persone", JSON.stringify(persone)); // Aggiorna localStorage
+            mostraElenco(); // Rerenderizza la tabella
+            alert("Tutti i contatti sono stati eliminati!");
+        }
+    }
+
+    // Inizializza mostrando l'elenco al caricamento della pagina
+    document.addEventListener("DOMContentLoaded", () => {
+        mostraElenco();
+    });
+
+    function mostraRisultatiRicerca(risultati) {
+        let risultatoRicercaDiv = document.getElementById("risultatoRicerca");
+        let ricercaDiv = document.getElementById("ricerca");
+
+        ricercaDiv.style.display = "none"; // Nascondi la ricerca
+        risultatoRicercaDiv.innerHTML = '';
+        risultatoRicercaDiv.style.display = "block"; // Mostra i risultati della ricerca
+
+        if (risultati.length === 0) {
+            risultatoRicercaDiv.innerHTML = `<div class="alert alert-info" role="alert">Nessun contatto trovato con i criteri di ricerca specificati.</div>`;
+        }else{
+                const table=document.createElement("table");
+                table.classList.add("table", "table-striped", "table-bordered", "mt-3");
+                
+                const thead=document.createElement("thead");
+                const tboby=document.createElement("tbody");
+                const headerRow = document.createElement("tr");
+
+                campi.forEach((campo)=>{
+                    const th=document.createElement("th");
+                    th.textContent=campo.label;
+                    headerRow.appendChild(th);
+                })
+                thead.appendChild(headerRow);
+                table.appendChild(thead);
+
+                risultati.forEach((persona) =>{
+                    const row=document.createElement("tr");
+                    campi.forEach((campo)=>{
+                        const td=document.createElement("td");
+                        td.textContent=persona[campo.nome_campo]||'';
+                        row.appendChild(td);
+                    })
+                    tboby.appendChild(row);
+                })
+                table.appendChild(tboby);
+                risultatoRicercaDiv.appendChild(table);
+        }
+           
+        const RitornoARicercaBtn=document.createElement("button");
+        RitornoARicercaBtn.textContent="Torna alla ricerca";
+        RitornoARicercaBtn.classList.add("btn","btn-warning","mb-3");
+        RitornoARicercaBtn.style.marginRight="5px";
+        RitornoARicercaBtn.addEventListener("click",() => {
+        risultatoRicercaDiv.style.display = "none";
+        ricercaDiv.style.display = "block";
+        });
+        risultatoRicercaDiv.appendChild(RitornoARicercaBtn);
+
+        const RitornoAdElencoBtn=document.createElement("button");
+        RitornoAdElencoBtn.textContent="Torna all'elenco";
+        RitornoAdElencoBtn.classList.add("btn","btn-danger","mb-3");
+        RitornoAdElencoBtn.addEventListener("click",mostraElenco);
+        risultatoRicercaDiv.appendChild(RitornoAdElencoBtn);
+
+    }
+
+
+
+    
+</script>
+</html>

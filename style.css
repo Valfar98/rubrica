@@ -1,0 +1,18 @@
+nav li {
+        display: inline-block;
+    }
+
+    #formAggiungi{
+        margin: 5px;
+        width: 100px;
+        padding: 1px;
+        font-size: 12px;  
+    }
+#formDiv{
+    margin: 5px;
+    width: 100vw;
+    padding: 1px;
+    font-size: 12px;  
+    display: none;
+    background-color: whitesmoke;
+}
