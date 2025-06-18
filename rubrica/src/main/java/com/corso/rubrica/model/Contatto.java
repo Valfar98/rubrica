@@ -1,12 +1,17 @@
 package com.corso.rubrica.model;
 
+import java.util.Set;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.ManyToOne;
 
 @Entity
-public class Utente {
+public class Contatto {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -15,18 +20,19 @@ public class Utente {
 	private String cognome;
 	private String email;
 	private String telefono;
-	private Integer eta;
+	@ManyToOne
+	@JoinColumn(name = "cliente_id")
+	private Cliente cliente;
 
-	public Utente(String nome, String cognome, String email, String telefono, Integer eta) {
+	public Contatto(String nome, String cognome, String email, String telefono) {
 		super();
 		this.nome = nome;
 		this.cognome = cognome;
 		this.email = email;
 		this.telefono = telefono;
-		this.eta = eta;
 	}
 
-	public Utente() {
+	public Contatto() {
 	}
 
 	public Integer getId() {
@@ -69,18 +75,17 @@ public class Utente {
 		this.telefono = telefono;
 	}
 
-	public Integer getEta() {
-		return eta;
-	}
-
-	public void setEta(Integer eta) {
-		this.eta = eta;
-	}
+	public Cliente getCliente() {
+        return cliente;
+    }
+	public void setCliente(Cliente cliente) {
+        this.cliente = cliente;
+    }
 
 	@Override
 	public String toString() {
-		return "Utente [id=" + id + ", nome=" + nome + ", cognome=" + cognome + ", email=" + email + ", telefono="
-				+ telefono + ", eta=" + eta + "]";
+		return "id=" + id + ", nome=" + nome + ", cognome=" + cognome + ", email=" + email + ", telefono="
+				+ telefono;
 	}
 
 }
